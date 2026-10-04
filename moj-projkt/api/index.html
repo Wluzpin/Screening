@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Wypełniacz Dokumentów</title>
+  <!-- Biblioteka pdf-lib ładowana z internetu za darmo -->
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; }
+    input { padding: 8px; width: 300px; margin-top: 5px; }
+    button { padding: 10px 20px; background: #0070f3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #0051a2; }
+  </style>
+</head>
+<body>
+
+  <h1>Formularz dokumentu</h1>
+  
+  <div class="form-group">
+    <label for="imie">Imię i Nazwisko:</label>
+    <input type="text" id="imie" placeholder="Jan Kowalski">
+  </div>
+
+  <div class="form-group">
+    <label for="kwota">Kwota Netto (PLN):</label>
+    <input type="number" id="kwota" placeholder="1000">
+  </div>
+
+  <button onclick="generujPDF()">Wygeneruj i pobierz PDF</button>
+
+  <script>
+    async function generujPDF() {
+      const imie = document.getElementById('imie').value;
+      const kwotaNetto = parseFloat(document.getElementById('kwota').value) || 0;
+      
+      // Automatyczne przeliczanie danych (np. VAT 23%)
+      const kwotaVat = kwotaNetto * 0.23;
+      const kwotaBrutto = kwotaNetto + kwotaVat;
+
+      // Tworzenie czystego dokumentu PDF w locie
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      const page = pdfDoc.addPage([600, 400]);
+
+      // Pisanie tekstu na PDF-ie
+      page.drawText('DOKUMENT POTWIERDZENIA', { x: 50, y: 350, size: 20 });
+      page.drawText(`Klient: ${imie}`, { x: 50, y: 300, size: 14 });
+      page.drawText(`Kwota Netto: ${kwotaNetto.toFixed(2)} PLN`, { x: 50, y: 260, size: 12 });
+      page.drawText(`VAT (23%): ${kwotaVat.toFixed(2)} PLN`, { x: 50, y: 240, size: 12 });
+      page.drawText(`Kwota Brutto (Automatycznie): ${kwotaBrutto.toFixed(2)} PLN`, { x: 50, y: 210, size: 14 });
+
+      // Generowanie pliku do pobrania
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'wypelniony_dokument.pdf';
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
